@@ -1,0 +1,52 @@
+import cv2
+import numpy as np
+import threading
+
+# Replace with the appropriate URL for your IP camera
+
+# Initialize the video capture object
+cap1 = cv2.VideoCapture(0)
+
+if not cap1.isOpened():
+    print("Error: Could not open video stream from IP camera 1.")
+    exit()
+
+frame1 = None
+ret1 = False
+
+# Define a function to capture frames from the camera
+def capture_camera1():
+    global frame1, ret1
+    while True:
+        ret1, frame1 = cap1.read()
+
+# Start a thread for capturing frames from the camera
+thread1 = threading.Thread(target=capture_camera1)
+thread1.start()
+
+# Create a resizable window
+cv2.namedWindow('IP Camera Feed', cv2.WINDOW_NORMAL)
+
+while True:
+    if ret1:
+        # Resize frame to a reasonable size
+        new_width = 640  # Adjust the target width as needed
+        frame1_resized = cv2.resize(frame1, (new_width, int(frame1.shape[0] * new_width / frame1.shape[1])))
+
+        # Get the current window size
+        window_width = cv2.getWindowImageRect('IP Camera Feed')[2]
+        window_height = cv2.getWindowImageRect('IP Camera Feed')[3]
+
+        # Resize the frame to fit the window size
+        frame1_resized = cv2.resize(frame1_resized, (window_width, window_height))
+
+        # Display the frame
+        cv2.imshow('IP Camera Feed', frame1_resized)
+
+    # Press 'q' to exit the loop
+    if cv2.waitKey(1) & 0xFF == ord('q'):
+        break
+
+# When everything is done, release the capture
+cap1.release()
+cv2.destroyAllWindows()
