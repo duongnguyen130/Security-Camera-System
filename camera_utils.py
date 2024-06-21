@@ -18,22 +18,25 @@ def capture_camera(index, caps, frames, rets):
         rets[index], frames[index] = caps[index].read()
 
 def combine_and_resize_frames(frames):
-    new_width = 640  # Adjust the target width as needed
-    frame1_resized = cv2.resize(frames[0], (new_width, int(frames[0].shape[0] * new_width / frames[0].shape[1])))
-    frame2_resized = cv2.resize(frames[1], (new_width, int(frames[1].shape[0] * new_width / frames[1].shape[1])))
-    frame3_resized = cv2.resize(frames[2], (new_width, int(frames[2].shape[0] * new_width / frames[2].shape[1])))
-    frame4_resized = cv2.resize(frames[3], (new_width, int(frames[3].shape[0] * new_width / frames[3].shape[1])))
-
-    frame1_3 = np.vstack((frame1_resized, frame3_resized))
-    frame2_4 = np.vstack((frame2_resized, frame4_resized))
-    combined_frame = np.hstack((frame1_3, frame2_4))
-
-    window_width = cv2.getWindowImageRect('Combined IP Camera Feeds')[2]
-    window_height = cv2.getWindowImageRect('Combined IP Camera Feeds')[3]
-
-    combined_frame_resized = cv2.resize(combined_frame, (window_width, window_height))
+    # Resize the frames to smaller dimensions while maintaining quality
+    new_width = 960  # Half of Full HD width
+    new_height = 540  # Half of Full HD height
     
-    return combined_frame_resized
+    frame1_resized = cv2.resize(frames[0], (new_width, new_height), interpolation=cv2.INTER_LINEAR)
+    frame2_resized = cv2.resize(frames[1], (new_width, new_height), interpolation=cv2.INTER_LINEAR)
+    frame3_resized = cv2.resize(frames[2], (new_width, new_height), interpolation=cv2.INTER_LINEAR)
+    frame4_resized = cv2.resize(frames[3], (new_width, new_height), interpolation=cv2.INTER_LINEAR)
+
+    # Create a blank frame with Full HD resolution (1920x1080)
+    combined_frame = np.zeros((1080, 1920, 3), dtype=np.uint8)
+
+    # Place the resized frames into the blank frame
+    combined_frame[0:new_height, 0:new_width] = frame1_resized
+    combined_frame[0:new_height, new_width:new_width*2] = frame2_resized
+    combined_frame[new_height:new_height*2, 0:new_width] = frame3_resized
+    combined_frame[new_height:new_height*2, new_width:new_width*2] = frame4_resized
+    
+    return combined_frame
 
 def release_cameras(caps):
     for cap in caps:
